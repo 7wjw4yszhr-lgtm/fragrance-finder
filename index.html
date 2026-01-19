@@ -11,9 +11,21 @@
 <link rel="apple-touch-icon" href="apple-touch-icon.png?v=2">
 </head>
 <body>
-  <header class="wrap">
-    <h1>Fragrance Finder</h1>
-    <p class="sub">Search notes, originals, dupes, families, brands.</p>
+ <header class="wrap">
+  <div class="topBar">
+    <div>
+      <h1>Fragrance Finder</h1>
+      <p class="sub">Search notes, originals, inspired expressions, families, brands.</p>
+    </div>
+
+    <button id="privateBtn" class="iconBtn" type="button" aria-label="Private Mode">
+      🔒 <span id="privateLabel">Private</span>
+    </button>
+  </div>
+
+  <div id="privateHint" class="privateHint" hidden>
+    Private Mode is on.
+  </div>
 
     <div class="searchRow">
       <input id="q" type="search" placeholder='Try: "sandalwood" or "Santal 33"' autocomplete="off" />
@@ -39,6 +51,7 @@
   <script src="app.js?v=3"></script>
 </body>
 </html>
+
 
 
 
