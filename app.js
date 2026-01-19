@@ -12,8 +12,8 @@ function normalize(s) {
   return (s ?? "")
     .toString()
     .toLowerCase()
-    .normalize("NFKD")
-    .replace(/\p{Diacritic}/gu, "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
     .trim();
 }
 
@@ -41,3 +41,4 @@ function highlightText(text, qTerms) {
     if (!t) continue;
     const escaped = t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
     const re
+
