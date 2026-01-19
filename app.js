@@ -129,30 +129,70 @@ function buildHaystack(item) {
 }
 
 
-function matchesAllTerms(hay, terms) {
-  return terms.every((t) => hay.includes(t));
-}
-
 function cardHtml(item, terms) {
   const badge = badgeText(item);
   const owned = item.owned ? "Owned" : "Not owned";
   const cardId = "c_" + (item.id ?? normalize(item.name ?? "").replace(/\s+/g, "_"));
 
-  const familyText = Array.isArray(item.family) ? item.family.join(", ") : (item.family ?? "");
-  const genderText = item.gender ?? "";
+  // Helper: show text no matter how it is stored
+  const toText = (v) => {
+    if (v == null) return "";
+    if (Array.isArray(v)) return v.map(toText).filter(Boolean).join(", ");
+    if (typeof v === "object") return Object.values(v).map(toText).filter(Boolean).join(", ");
+    return String(v);
+  };
 
-  const topNotes = item.notesTop ?? (item.notes?.top ? item.notes.top.join(", ") : "");
-  const heartNotes = item.notesHeart ?? (item.notes?.heart ? item.notes.heart.join(", ") : "");
-  const baseNotes = item.notesBase ?? (item.notes?.base ? item.notes.base.join(", ") : "");
+  // Family / gender
+  const familyText = toText(item.family ?? item["Scent Family"] ?? item["Olfactive Family"] ?? item.scentFamily ?? item.olfactiveFamily ?? "");
+  const genderText = toText(item.gender ?? "");
 
-  const concentration = item.concentration ?? "";
+  // Concentration (many names)
+  const concentration = toText(item.concentration ?? item["Concentration"] ?? "");
 
+  // Reference / inspired by (many names)
+  const reference = toText(item.inspiredBy ?? item["Inspired By"] ?? item.reference ?? item["Reference"] ?? "");
+
+  // Notes (many possible formats)
+  const notesArray = Array.isArray(item.notes) ? item.notes : [];
+  const notesObj = item.notes && typeof item.notes === "object" && !Array.isArray(item.notes) ? item.notes : null;
+
+  const topNotes = toText(
+    item.notesTop ??
+    item["Top Notes"] ??
+    item.topNotes ??
+    item.top_notes ??
+    notesObj?.top ??
+    ""
+  );
+
+  const heartNotes = toText(
+    item.notesHeart ??
+    item["Heart Notes"] ??
+    item.middleNotes ??
+    item.middle_notes ??
+    item.heartNotes ??
+    notesObj?.heart ??
+    notesObj?.middle ??
+    ""
+  );
+
+  const baseNotes = toText(
+    item.notesBase ??
+    item["Base Notes"] ??
+    item["Bottom Notes"] ??
+    item.baseNotes ??
+    item.base_notes ??
+    notesObj?.base ??
+    ""
+  );
+
+  // If notes are only in a single list, show them as "All Notes"
+  const allNotesText = toText(item.notesText ?? item["Notes"] ?? item["All Notes"] ?? (notesArray.length ? notesArray : ""));
+
+  // Private block (only shows when unlocked)
   let privateHtml = "";
   if (PRIVATE_MODE && item.private && item.private.builtFrom) {
-    const builtFrom = Array.isArray(item.private.builtFrom)
-      ? item.private.builtFrom.join(", ")
-      : String(item.private.builtFrom);
-
+    const builtFrom = toText(item.private.builtFrom);
     privateHtml =
       '<div class="kv" style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.10); padding-top:10px;">' +
       "<div><b>Private:</b> Built from " + escapeHtml(builtFrom) + "</div>" +
@@ -167,8 +207,8 @@ function cardHtml(item, terms) {
       "</div>" +
 
       '<div class="metaRow">' +
-        '<div class="metaItem"><span class="metaLabel">House</span> ' + highlight(item.brand ?? "", terms) + "</div>" +
-        '<div class="metaItem"><span class="metaLabel">Olfactive Family</span> ' + highlight(familyText, terms) + "</div>" +
+        '<div class="metaItem"><span class="metaLabel">House</span> ' + highlight(toText(item.brand ?? item.house ?? ""), terms) + "</div>" +
+        '<div class="metaItem"><span class="metaLabel">Olfactive Family</span> ' + highlight(familyText || "—", terms) + "</div>" +
         (genderText ? '<div class="metaItem"><span class="metaLabel">Gender</span> ' + highlight(genderText, terms) + "</div>" : "") +
       "</div>" +
 
@@ -176,11 +216,16 @@ function cardHtml(item, terms) {
       '<div class="details" id="' + cardId + '" hidden>' +
 
         '<div class="kv">' +
-          '<div><b>Reference:</b> ' + (item.inspiredBy ? highlight(item.inspiredBy, terms) : "—") + "</div>" +
+          "<div><b>Reference:</b> " + (reference ? highlight(reference, terms) : "—") + "</div>" +
           (concentration ? "<div><b>Concentration:</b> " + highlight(concentration, terms) + "</div>" : "") +
+
+          // Show pyramid if we have it
           (topNotes ? "<div><b>Top:</b> " + highlight(topNotes, terms) + "</div>" : "") +
           (heartNotes ? "<div><b>Heart:</b> " + highlight(heartNotes, terms) + "</div>" : "") +
           (baseNotes ? "<div><b>Base:</b> " + highlight(baseNotes, terms) + "</div>" : "") +
+
+          // Fallback if notes are stored as one field/list
+          ((!topNotes && !heartNotes && !baseNotes && allNotesText) ? "<div><b>Notes:</b> " + highlight(allNotesText, terms) + "</div>" : "") +
         "</div>" +
 
         privateHtml +
@@ -272,4 +317,5 @@ async function init() {
 }
 
 init();
+
 
