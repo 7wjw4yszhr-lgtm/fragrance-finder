@@ -55,34 +55,79 @@ function badgeText(item) {
 
 // Make sure search finds everything (including expandable notes + private components)
 function buildHaystack(item) {
-  const familyText = Array.isArray(item.family) ? item.family.join(", ") : (item.family ?? "");
-  const tagsText = Array.isArray(item.tags) ? item.tags.join(", ") : (item.tags ?? "");
+  // Helper: turn anything into searchable text
+  const toText = (v) => {
+    if (v == null) return "";
+    if (Array.isArray(v)) return v.map(toText).filter(Boolean).join(", ");
+    if (typeof v === "object") {
+      // Flatten object values (handles nested note pyramids)
+      return Object.values(v).map(toText).filter(Boolean).join(", ");
+    }
+    return String(v);
+  };
 
-  const topNotes = item.notesTop ?? (item.notes?.top ? item.notes.top.join(", ") : "");
-  const heartNotes = item.notesHeart ?? (item.notes?.heart ? item.notes.heart.join(", ") : "");
-  const baseNotes = item.notesBase ?? (item.notes?.base ? item.notes.base.join(", ") : "");
+  // Notes in many possible formats
+  const notesArray = Array.isArray(item.notes) ? item.notes : [];
+  const notesTopA = item.notesTop ?? item["Top Notes"] ?? item.topNotes ?? item.top_notes ?? "";
+  const notesHeartA = item.notesHeart ?? item["Heart Notes"] ?? item.heartNotes ?? item.middleNotes ?? item.middle_notes ?? "";
+  const notesBaseA = item.notesBase ?? item["Base Notes"] ?? item["Bottom Notes"] ?? item.baseNotes ?? item.base_notes ?? "";
 
-  const builtFrom = item.private?.builtFrom
-    ? (Array.isArray(item.private.builtFrom) ? item.private.builtFrom.join(", ") : String(item.private.builtFrom))
-    : "";
+  // Note pyramid object formats: notes: {top, heart/middle, base}
+  const notesObj = item.notes && typeof item.notes === "object" && !Array.isArray(item.notes) ? item.notes : null;
+  const notesTopB = notesObj?.top ?? "";
+  const notesHeartB = notesObj?.heart ?? notesObj?.middle ?? "";
+  const notesBaseB = notesObj?.base ?? "";
 
+  // Some people store everything in one field
+  const notesText = item.notesText ?? item["Notes"] ?? item["All Notes"] ?? "";
+
+  // Family/tags can be arrays or strings
+  const familyText =
+    item.family ?? item["Scent Family"] ?? item["Olfactive Family"] ?? item.scentFamily ?? item.olfactiveFamily ?? "";
+
+  const tagsText = item.tags ?? item["Tags"] ?? "";
+
+  // Private components (searchable even when not shown)
+  const builtFrom =
+    item.private?.builtFrom ?? item["Built From"] ?? item.builtFrom ?? item.components ?? item["Components"] ?? "";
+
+  // Include common identity fields too
   return [
+    item.id,
     item.name,
     item.brand,
+    item.house,
     item.inspiredBy,
-    familyText,
+    item["Inspired By"],
+    item.reference,
+    item["Reference"],
     item.gender,
     item.concentration,
-    topNotes,
-    heartNotes,
-    baseNotes,
+    item.size,
+    item["Size"],
+    item["Size (ml)"],
+    familyText,
     tagsText,
-    builtFrom
+
+    // Notes in all formats
+    notesArray,
+    notesTopA,
+    notesHeartA,
+    notesBaseA,
+    notesTopB,
+    notesHeartB,
+    notesBaseB,
+    notesText,
+
+    // Private composition fields
+    builtFrom,
   ]
+    .map(toText)
     .filter(Boolean)
     .map(normalize)
     .join(" | ");
 }
+
 
 function matchesAllTerms(hay, terms) {
   return terms.every((t) => hay.includes(t));
@@ -227,3 +272,4 @@ async function init() {
 }
 
 init();
+
