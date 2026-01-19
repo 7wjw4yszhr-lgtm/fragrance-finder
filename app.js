@@ -1,4 +1,7 @@
 let DATA = [];
+let PRIVATE_MODE = false;
+const PRIVATE_CODE = "DE-2026";
+
 
 const els = {
   q: document.getElementById("q"),
@@ -7,6 +10,10 @@ const els = {
   clearBtn: document.getElementById("clearBtn"),
   onlyOwned: document.getElementById("onlyOwned"),
   onlyDupes: document.getElementById("onlyDupes"),
+    privateBtn: document.getElementById("privateBtn"),
+  privateLabel: document.getElementById("privateLabel"),
+  privateHint: document.getElementById("privateHint"),
+
 };
 
 function normalize(s) {
@@ -90,6 +97,14 @@ function render(list, terms) {
   }
   els.results.innerHTML = list.map((item) => cardHtml(item, terms)).join("");
 }
+function setPrivateMode(on) {
+  PRIVATE_MODE = !!on;
+  els.privateHint.hidden = !PRIVATE_MODE;
+  els.privateLabel.textContent = PRIVATE_MODE ? "Private On" : "Private";
+  els.privateBtn.textContent = PRIVATE_MODE ? "🔓 " : "🔒 ";
+  els.privateBtn.appendChild(els.privateLabel);
+  searchAndRender();
+}
 
 function searchAndRender() {
   const raw = els.q.value;
@@ -129,4 +144,17 @@ async function init() {
   });
 }
 
-init();
+init(  els.privateBtn.addEventListener("click", () => {
+    if (PRIVATE_MODE) {
+      setPrivateMode(false);
+      return;
+    }
+    const code = prompt("Enter Private Mode code:");
+    if (code === PRIVATE_CODE) {
+      setPrivateMode(true);
+    } else if (code !== null) {
+      alert("Incorrect code.");
+    }
+  });
+);
+
