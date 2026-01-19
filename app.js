@@ -23,26 +23,6 @@ function normalize(s) {
     .trim();
 }
 
-function buildHaystack(item) {
-  const notes = Array.isArray(item.notes) ? item.notes.join(", ") : (item.notes ?? "");
-  const tags = Array.isArray(item.tags) ? item.tags.join(", ") : (item.tags ?? "");
-  return [
-    item.name,
-    item.brand,
-    item.inspiredBy,
-    item.family,
-    notes,
-    tags
-  ]
-    .filter(Boolean)
-    .map(normalize)
-    .join(" | ");
-}
-
-function matchesAllTerms(hay, terms) {
-  return terms.every((t) => hay.includes(t));
-}
-
 function escapeHtml(s) {
   return (s ?? "")
     .toString()
@@ -67,10 +47,60 @@ function highlight(text, terms) {
   return out;
 }
 
+function badgeText(item) {
+  if (item.isHouseOriginal) return "House Original";
+  if (item.isDupe) return "Inspired Expression";
+  return "Original";
+}
+
+// Make sure search finds everything (including expandable notes + private components)
+function buildHaystack(item) {
+  const familyText = Array.isArray(item.family) ? item.family.join(", ") : (item.family ?? "");
+  const tagsText = Array.isArray(item.tags) ? item.tags.join(", ") : (item.tags ?? "");
+
+  const topNotes = item.notesTop ?? (item.notes?.top ? item.notes.top.join(", ") : "");
+  const heartNotes = item.notesHeart ?? (item.notes?.heart ? item.notes.heart.join(", ") : "");
+  const baseNotes = item.notesBase ?? (item.notes?.base ? item.notes.base.join(", ") : "");
+
+  const builtFrom = item.private?.builtFrom
+    ? (Array.isArray(item.private.builtFrom) ? item.private.builtFrom.join(", ") : String(item.private.builtFrom))
+    : "";
+
+  return [
+    item.name,
+    item.brand,
+    item.inspiredBy,
+    familyText,
+    item.gender,
+    item.concentration,
+    topNotes,
+    heartNotes,
+    baseNotes,
+    tagsText,
+    builtFrom
+  ]
+    .filter(Boolean)
+    .map(normalize)
+    .join(" | ");
+}
+
+function matchesAllTerms(hay, terms) {
+  return terms.every((t) => hay.includes(t));
+}
+
 function cardHtml(item, terms) {
-  const notesText = Array.isArray(item.notes) ? item.notes.join(", ") : (item.notes ?? "");
-  const badge = item.isDupe ? "Dupe" : "Original";
+  const badge = badgeText(item);
   const owned = item.owned ? "Owned" : "Not owned";
+  const cardId = "c_" + (item.id ?? normalize(item.name ?? "").replace(/\s+/g, "_"));
+
+  const familyText = Array.isArray(item.family) ? item.family.join(", ") : (item.family ?? "");
+  const genderText = item.gender ?? "";
+
+  const topNotes = item.notesTop ?? (item.notes?.top ? item.notes.top.join(", ") : "");
+  const heartNotes = item.notesHeart ?? (item.notes?.heart ? item.notes.heart.join(", ") : "");
+  const baseNotes = item.notesBase ?? (item.notes?.base ? item.notes.base.join(", ") : "");
+
+  const concentration = item.concentration ?? "";
 
   let privateHtml = "";
   if (PRIVATE_MODE && item.private && item.private.builtFrom) {
@@ -90,13 +120,27 @@ function cardHtml(item, terms) {
         '<div class="title">' + highlight(item.name ?? "", terms) + "</div>" +
         '<div class="badge">' + badge + " · " + owned + "</div>" +
       "</div>" +
-      '<div class="kv">' +
-        "<div><b>Brand:</b> " + highlight(item.brand ?? "", terms) + "</div>" +
-        "<div><b>Inspired by:</b> " + (item.inspiredBy ? highlight(item.inspiredBy, terms) : "—") + "</div>" +
-        "<div><b>Family:</b> " + (item.family ? highlight(item.family, terms) : "—") + "</div>" +
-        "<div><b>Notes:</b> " + (notesText ? highlight(notesText, terms) : "—") + "</div>" +
+
+      '<div class="metaRow">' +
+        '<div class="metaItem"><span class="metaLabel">House</span> ' + highlight(item.brand ?? "", terms) + "</div>" +
+        '<div class="metaItem"><span class="metaLabel">Olfactive Family</span> ' + highlight(familyText, terms) + "</div>" +
+        (genderText ? '<div class="metaItem"><span class="metaLabel">Gender</span> ' + highlight(genderText, terms) + "</div>" : "") +
       "</div>" +
-      privateHtml +
+
+      '<button class="detailsBtn" type="button" data-target="' + cardId + '">Details</button>' +
+      '<div class="details" id="' + cardId + '" hidden>' +
+
+        '<div class="kv">' +
+          '<div><b>Reference:</b> ' + (item.inspiredBy ? highlight(item.inspiredBy, terms) : "—") + "</div>" +
+          (concentration ? "<div><b>Concentration:</b> " + highlight(concentration, terms) + "</div>" : "") +
+          (topNotes ? "<div><b>Top:</b> " + highlight(topNotes, terms) + "</div>" : "") +
+          (heartNotes ? "<div><b>Heart:</b> " + highlight(heartNotes, terms) + "</div>" : "") +
+          (baseNotes ? "<div><b>Base:</b> " + highlight(baseNotes, terms) + "</div>" : "") +
+        "</div>" +
+
+        privateHtml +
+
+      "</div>" +
     "</article>"
   );
 }
@@ -106,7 +150,19 @@ function render(list, terms) {
     els.results.innerHTML = '<div class="card"><div class="meta">No matches.</div></div>';
     return;
   }
+
   els.results.innerHTML = list.map((item) => cardHtml(item, terms)).join("");
+
+  // Wire up Details toggle buttons
+  els.results.querySelectorAll(".detailsBtn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.getAttribute("data-target");
+      const panel = document.getElementById(id);
+      if (!panel) return;
+      panel.hidden = !panel.hidden;
+      btn.textContent = panel.hidden ? "Details" : "Hide";
+    });
+  });
 }
 
 function setPrivateMode(on) {
