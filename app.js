@@ -173,16 +173,93 @@ function render(list, terms) {
 }
 
 function searchAndRender() {
-  const raw = els.q.value;
-  const terms = normalize(raw).split(/\s+/).filter(Boolean);
+  const raw = els.q.value.trim();
+  const q = normalize(raw);
+  const terms = q.split(/\s+/).filter(Boolean);
 
+  // ---------- SMART COMMANDS ----------
+  // Supported:
+  // dupes of <query>
+  // inspired by <query>
+  // original <query>
+  // house original / house:original
+  let mode = "all"; // all | dupes_of | original
+  let modeQuery = q;
+
+  const isHouseOnly =
+    q === "house original" ||
+    q === "house:original" ||
+    q === "house originals" ||
+    q === "house:originals";
+
+  if (q.startsWith("dupes of ")) {
+    mode = "dupes_of";
+    modeQuery = q.replace(/^dupes of\s+/, "").trim();
+  } else if (q.startsWith("inspired by ")) {
+    mode = "dupes_of";
+    modeQuery = q.replace(/^inspired by\s+/, "").trim();
+  } else if (q.startsWith("original ")) {
+    mode = "original";
+    modeQuery = q.replace(/^original\s+/, "").trim();
+  }
+
+  const modeTerms = modeQuery.split(/\s+/).filter(Boolean);
+
+  // ---------- SYNONYMS ----------
+  // Expand terms so searching either word finds the other.
+  const synonymMap = {
+    sandalwood: ["santal", "sandalo"],
+    santal: ["sandalwood", "sandalo"],
+    bergamot: ["calabrian bergamot"],
+    vetiver: ["haitian vetiver"],
+    ambroxan: ["amberwood", "amber-wood", "ambroxin"],
+  };
+
+  const expandedTerms = [];
+  for (const t of (modeTerms.length ? modeTerms : terms)) {
+    expandedTerms.push(t);
+    if (synonymMap[t]) expandedTerms.push(...synonymMap[t]);
+  }
+
+  // de-dupe expanded terms
+  const finalTerms = [...new Set(expandedTerms)].filter(Boolean);
+
+  // ---------- FILTER ----------
   const filtered = DATA
-    .filter((i) => (els.onlyOwned.checked ? i.owned : true))
-    .filter((i) => (els.onlyDupes.checked ? i.isDupe : true))
-    .filter((i) => (terms.length ? matchesAllTerms(buildHaystack(i), terms) : true))
+    // checkbox filters still apply
+    .filter((i) => (els.onlyOwned.checked ? !!i.owned : true))
+    .filter((i) => (els.onlyDupes.checked ? !!i.isDupe : true))
+    // smart mode filters
+    .filter((i) => {
+      if (isHouseOnly) return !!i.isHouseOriginal;
+
+      if (mode === "dupes_of") {
+        if (!i.isDupe) return false;
+        const ref = normalize(i.inspiredBy ?? i.reference ?? i["Inspired By"] ?? i["Reference"] ?? "");
+        if (!finalTerms.length) return true;
+        return finalTerms.every((t) => ref.includes(t));
+      }
+
+      if (mode === "original") {
+        if (i.isDupe) return false;
+        const hay = buildHaystack(i);
+        if (!finalTerms.length) return true;
+        return matchesAllTerms(hay, finalTerms);
+      }
+
+      // default: search across everything
+      const hay = buildHaystack(i);
+      if (!finalTerms.length) return true;
+      return matchesAllTerms(hay, finalTerms);
+    })
     .sort((a, b) => normalize(a.name).localeCompare(normalize(b.name)));
 
-  els.status.textContent = `${filtered.length} match(es)` + (raw ? ` for "${raw}"` : "");
+  // ---------- STATUS ----------
+  let label = `${filtered.length} match(es)`;
+  if (raw) label += ` for "${raw}"`;
+  els.status.textContent = label;
+
+  // highlight should use the user's original split terms (not the expanded synonyms)
   render(filtered, terms);
 }
 
@@ -216,3 +293,4 @@ async function init() {
 }
 
 init();
+
