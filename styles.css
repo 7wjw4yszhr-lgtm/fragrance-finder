@@ -120,3 +120,38 @@ button:hover {
 .hl {
   color: #fff;
 }
+
+.topBar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+
+.iconBtn{
+  appearance:none;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);
+  color:#fff;
+  padding:10px 12px;
+  border-radius:12px;
+  cursor:pointer;
+  font-size:14px;
+  line-height:1;
+  white-space:nowrap;
+}
+
+.iconBtn:hover{
+  background:rgba(255,255,255,0.07);
+}
+
+.privateHint{
+  margin-top:10px;
+  padding:10px 12px;
+  border-radius:12px;
+  border:1px solid rgba(255,255,255,0.12);
+  background:rgba(255,255,255,0.04);
+  font-size:13px;
+  opacity:0.9;
+}
+
