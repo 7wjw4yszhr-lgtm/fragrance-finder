@@ -2,7 +2,6 @@ let DATA = [];
 let PRIVATE_MODE = false;
 const PRIVATE_CODE = "DE-2026";
 
-
 const els = {
   q: document.getElementById("q"),
   results: document.getElementById("results"),
@@ -10,10 +9,9 @@ const els = {
   clearBtn: document.getElementById("clearBtn"),
   onlyOwned: document.getElementById("onlyOwned"),
   onlyDupes: document.getElementById("onlyDupes"),
-    privateBtn: document.getElementById("privateBtn"),
+  privateBtn: document.getElementById("privateBtn"),
   privateLabel: document.getElementById("privateLabel"),
   privateHint: document.getElementById("privateHint"),
-
 };
 
 function normalize(s) {
@@ -74,6 +72,18 @@ function cardHtml(item, terms) {
   const badge = item.isDupe ? "Dupe" : "Original";
   const owned = item.owned ? "Owned" : "Not owned";
 
+  let privateHtml = "";
+  if (PRIVATE_MODE && item.private && item.private.builtFrom) {
+    const builtFrom = Array.isArray(item.private.builtFrom)
+      ? item.private.builtFrom.join(", ")
+      : String(item.private.builtFrom);
+
+    privateHtml =
+      '<div class="kv" style="margin-top:10px; border-top:1px solid rgba(255,255,255,0.10); padding-top:10px;">' +
+      "<div><b>Private:</b> Built from " + escapeHtml(builtFrom) + "</div>" +
+      "</div>";
+  }
+
   return (
     '<article class="card">' +
       '<div class="cardTop">' +
@@ -86,6 +96,7 @@ function cardHtml(item, terms) {
         "<div><b>Family:</b> " + (item.family ? highlight(item.family, terms) : "—") + "</div>" +
         "<div><b>Notes:</b> " + (notesText ? highlight(notesText, terms) : "—") + "</div>" +
       "</div>" +
+      privateHtml +
     "</article>"
   );
 }
@@ -97,6 +108,7 @@ function render(list, terms) {
   }
   els.results.innerHTML = list.map((item) => cardHtml(item, terms)).join("");
 }
+
 function setPrivateMode(on) {
   PRIVATE_MODE = !!on;
   els.privateHint.hidden = !PRIVATE_MODE;
@@ -142,9 +154,9 @@ async function init() {
     els.q.focus();
     searchAndRender();
   });
-}
 
-init(  els.privateBtn.addEventListener("click", () => {
+  // Private Mode toggle
+  els.privateBtn.addEventListener("click", () => {
     if (PRIVATE_MODE) {
       setPrivateMode(false);
       return;
@@ -156,5 +168,6 @@ init(  els.privateBtn.addEventListener("click", () => {
       alert("Incorrect code.");
     }
   });
-);
+}
 
+init();
