@@ -18,6 +18,22 @@
     "notes": ["sandalwood", "cedar", "spice", "leather"]
   },
   {
+  "id": "test_sandalwood",
+  "name": "Sandalwood Test",
+  "brand": "Dilettante eScentials",
+  "isDupe": false,
+  "isHouseOriginal": true,
+  "owned": true,
+  "inspiredBy": "—",
+  "family": ["Woody"],
+  "gender": "Unisex",
+  "concentration": "EDP",
+  "notesTop": "Bergamot",
+  "notesHeart": "Iris",
+  "notesBase": "Sandalwood, Ambroxan",
+  "tags": ["test"]
+},
+  {
     "name": "Dilettante eScentials Ciel Minéral",
     "brand": "Dilettante eScentials",
     "owned": true,
@@ -27,3 +43,4 @@
     "notes": ["bergamot", "vetiver", "ambroxan", "grapefruit", "lavender"]
   }
 ]
+
