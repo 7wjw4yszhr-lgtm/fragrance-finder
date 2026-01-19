@@ -1,0 +1,29 @@
+[
+  {
+    "name": "Le Labo Santal 33",
+    "brand": "Le Labo",
+    "owned": false,
+    "isDupe": false,
+    "inspiredBy": "",
+    "family": "Woody",
+    "notes": ["sandalwood", "cedar", "cardamom", "leather", "violet"]
+  },
+  {
+    "name": "Maison Alhambra Sceptre Malachite",
+    "brand": "Maison Alhambra",
+    "owned": true,
+    "isDupe": true,
+    "inspiredBy": "Santal 33",
+    "family": "Woody",
+    "notes": ["sandalwood", "cedar", "spice", "leather"]
+  },
+  {
+    "name": "Dilettante eScentials Ciel Minéral",
+    "brand": "Dilettante eScentials",
+    "owned": true,
+    "isDupe": false,
+    "inspiredBy": "",
+    "family": "Fresh Woody",
+    "notes": ["bergamot", "vetiver", "ambroxan", "grapefruit", "lavender"]
+  }
+]

@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="theme-color" content="#111111" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="stylesheet" href="styles.css" />
+  <title>Fragrance Finder</title>
+</head>
+<body>
+  <header class="wrap">
+    <h1>Fragrance Finder</h1>
+    <p class="sub">Search notes, originals, dupes, families, brands.</p>
+
+    <div class="searchRow">
+      <input id="q" type="search" placeholder='Try: "sandalwood" or "Santal 33"' autocomplete="off" />
+      <button id="clearBtn" type="button">Clear</button>
+    </div>
+
+    <div class="toggles">
+      <label><input type="checkbox" id="onlyOwned" /> Owned only</label>
+      <label><input type="checkbox" id="onlyDupes" /> Only dupes</label>
+    </div>
+
+    <div id="status" class="status">Loading fragrances…</div>
+  </header>
+
+  <main class="wrap">
+    <div id="results" class="results"></div>
+  </main>
+
+  <footer class="wrap foot">
+    <small>Tip: Install this as an app from your browser menu.</small>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
