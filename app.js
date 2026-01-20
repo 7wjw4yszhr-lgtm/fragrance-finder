@@ -401,6 +401,8 @@ function setExpansionNotice(appliedLabels) {
 
 function cardHtml(item, terms, meta) {
   const badge = badgeText(item);
+  const badgeCls = badgeClassFromText(badge);
+    
   const brandNorm = normalize(toText(item.brand ?? item.house ?? ""));
   const isHouse = brandNorm === normalize("Dilettante eScentials") || !!item.isHouse;
   const catalogLabel = isHouse ? "House" : "Collection";
@@ -436,7 +438,7 @@ function cardHtml(item, terms, meta) {
     '<article class="card">' +
       '<div class="cardTop">' +
         '<div class="title">' + highlight(item.name ?? "", terms) + "</div>" +
-        '<div class="badge ' + badgeClass(item) + '">' + badge + "</div>" +
+        '<div class="badge ' + badgeCls + '">' + escapeHtml(badge) + '</div>' +
       "</div>" +
 
       inspiredLine +
@@ -645,6 +647,7 @@ makePairExclusive(els.onlyOriginals, els.onlyInspired);
 }
 
 init();
+
 
 
 
