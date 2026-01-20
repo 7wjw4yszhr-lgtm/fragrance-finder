@@ -33,10 +33,19 @@
     </div>
 
     <div class="toggles">
-      <label><input type="checkbox" id="onlyCollection"> Collection Only</label>
-      <label><input type="checkbox" id="onlyHouse"> House Only</label>
-      <label><input type="checkbox" id="onlyOriginals"> Only Originals</label>
-      <label><input type="checkbox" id="onlyInspired"> Only Inspired Expressions</label>
+      <div class="filterBlock">
+  <div class="filterGroup">
+    <div class="filterTitle">Catalog</div>
+    <label><input type="checkbox" id="onlyCollection"> Fragrance Collection</label>
+    <label><input type="checkbox" id="onlyHouse"> Dilettante eScentials Catalog (House)</label>
+  </div>
+
+  <div class="filterGroup">
+    <div class="filterTitle">Type</div>
+    <label><input type="checkbox" id="onlyOriginals"> Original</label>
+    <label><input type="checkbox" id="onlyInspired"> Inspired</label>
+  </div>
+</div>
 
     </div>
 
@@ -54,6 +63,7 @@
   <script src="app.js?v=3"></script>
 </body>
 </html>
+
 
 
 
