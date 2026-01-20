@@ -71,6 +71,70 @@ function badgeText(item) {
   if (item.isDupe) return "Inspired Expression";
   return "Original";
 }
+function notesToArray(item) {
+  // Returns notes as an array of original strings, deduped, from any supported format.
+  // This is for DISPLAY and match-metadata, not for filtering.
+  const n = extractNotes(item);
+
+  // If the item has a simple notes array, prefer it.
+  const direct = Array.isArray(item.notes) ? item.notes : null;
+
+  const fromPyramid = []
+    .concat((n.top ? n.top.split(",") : []))
+    .concat((n.heart ? n.heart.split(",") : []))
+    .concat((n.base ? n.base.split(",") : []))
+    .map((x) => (x ?? "").toString().trim())
+    .filter(Boolean);
+
+  const fromAll = (n.all ? n.all.split(",") : [])
+    .map((x) => (x ?? "").toString().trim())
+    .filter(Boolean);
+
+  const raw = (direct ?? []).concat(fromPyramid).concat(fromAll);
+
+  // Deduplicate by normalized form, preserve first seen casing
+  const seen = new Set();
+  const out = [];
+  for (const r of raw) {
+    const key = normalize(r);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    out.push(r);
+  }
+  return out;
+}
+
+function computeMatchedNotes(item, groups) {
+  // groups: array of alternatives per typed term (OR within, AND across)
+  // We return notes that matched at least one group alternative.
+  const notesArr = notesToArray(item);
+  if (!notesArr.length || !groups.length) return [];
+
+  const notesNorm = notesArr.map((x) => normalize(x));
+  const matched = [];
+
+  for (const alts of groups) {
+    // Find notes that satisfy this group
+    for (let i = 0; i < notesNorm.length; i++) {
+      const nn = notesNorm[i];
+      const hit = alts.some((alt) => nn.includes(alt));
+      if (hit) matched.push(notesArr[i]);
+    }
+  }
+
+  // Deduplicate again, keep order, and cap for clean UI
+  const seen = new Set();
+  const out = [];
+  for (const m of matched) {
+    const k = normalize(m);
+    if (!k || seen.has(k)) continue;
+    seen.add(k);
+    out.push(m);
+    if (out.length >= 8) break;
+  }
+  return out;
+}
+
 
 /* -------------------- data extraction (all formats) -------------------- */
 
@@ -294,17 +358,17 @@ function setExpansionNotice(appliedLabels) {
 
 /* -------------------- cards -------------------- */
 
-function cardHtml(item, terms) {
+function cardHtml(item, terms, meta) {
   const badge = badgeText(item);
   const owned = item.owned ? "Owned" : "Not owned";
   const cardId = "c_" + (item.id ?? normalize(item.name ?? "").replace(/\s+/g, "_"));
 
   const family = toText(extractField(item, ["family", "Olfactive Family", "Scent Family"])).trim();
   const gender = toText(extractField(item, ["gender"])).trim();
-  const concentration = toText(extractField(item, ["concentration", "Concentration"])).trim();
   const reference = toText(extractField(item, ["inspiredBy", "Inspired By", "reference", "Reference"])).trim();
 
   const notes = extractNotes(item);
+  const matchedNotes = (meta?.matchedNotes ?? []).slice(0, 8);
 
   let privateHtml = "";
   if (PRIVATE_MODE && item.private?.builtFrom) {
@@ -314,6 +378,16 @@ function cardHtml(item, terms) {
       "</div>";
   }
 
+  const inspiredLine = reference
+    ? '<div class="subLine"><span class="metaLabel">Inspired by</span> ' + highlight(reference, terms) + "</div>"
+    : "";
+
+  const matchedNotesLine = matchedNotes.length
+    ? '<div class="subLine"><span class="metaLabel">Matched notes</span> ' +
+        matchedNotes.map((n) => '<span class="chip">' + escapeHtml(n) + "</span>").join(" ") +
+      "</div>"
+    : "";
+
   return (
     '<article class="card">' +
       '<div class="cardTop">' +
@@ -321,9 +395,12 @@ function cardHtml(item, terms) {
         '<div class="badge">' + badge + " · " + owned + "</div>" +
       "</div>" +
 
+      inspiredLine +
+      matchedNotesLine +
+
       '<div class="metaRow">' +
         '<div class="metaItem"><span class="metaLabel">House</span> ' + highlight(toText(item.brand ?? item.house ?? ""), terms) + "</div>" +
-        '<div class="metaItem"><span class="metaLabel">Olfactive Family</span> ' + highlight(family || "—", terms) + "</div>" +
+        '<div class="metaItem"><span class="metaLabel">Family</span> ' + highlight(family || "—", terms) + "</div>" +
         (gender ? '<div class="metaItem"><span class="metaLabel">Gender</span> ' + highlight(gender, terms) + "</div>" : "") +
       "</div>" +
 
@@ -331,8 +408,7 @@ function cardHtml(item, terms) {
       '<div class="details" id="' + cardId + '" hidden>' +
 
         '<div class="kv">' +
-          "<div><b>Reference:</b> " + (reference ? highlight(reference, terms) : "—") + "</div>" +
-          (concentration ? "<div><b>Concentration:</b> " + highlight(concentration, terms) + "</div>" : "") +
+          // Keep notes details here for full breakdown
           (notes.top ? "<div><b>Top:</b> " + highlight(notes.top, terms) + "</div>" : "") +
           (notes.heart ? "<div><b>Heart:</b> " + highlight(notes.heart, terms) + "</div>" : "") +
           (notes.base ? "<div><b>Base:</b> " + highlight(notes.base, terms) + "</div>" : "") +
@@ -346,13 +422,19 @@ function cardHtml(item, terms) {
   );
 }
 
-function render(list, terms) {
+function render(list, terms, metasById) {
   if (list.length === 0) {
     els.results.innerHTML = '<div class="card"><div class="meta">No matches.</div></div>';
     return;
   }
 
-  els.results.innerHTML = list.map((item) => cardHtml(item, terms)).join("");
+  els.results.innerHTML = list
+    .map((item) => {
+      const key = item.id ?? normalize(item.name ?? "");
+      const meta = metasById?.get(key) ?? null;
+      return cardHtml(item, terms, meta);
+    })
+    .join("");
 
   els.results.querySelectorAll(".detailsBtn").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -434,7 +516,13 @@ function searchAndRender() {
         const hay = buildHaystack(i);
         return matchGroupsAND(hay, groups);
       }
-
+  const metasById = new Map();
+  for (const item of filtered) {
+    const key = item.id ?? normalize(item.name ?? "");
+    metasById.set(key, {
+      matchedNotes: computeMatchedNotes(item, groups),
+    });
+  }
       const hay = buildHaystack(i);
       return matchGroupsAND(hay, groups);
     })
@@ -444,7 +532,7 @@ function searchAndRender() {
   els.status.innerHTML = `${filtered.length} match(es)` + (raw ? ` for "${escapeHtml(raw)}"` : "") + notice;
 
   // Highlight only what user typed, not expansions
-  render(filtered, userTerms);
+    render(filtered, userTerms, metasById);
 }
 
 /* -------------------- init -------------------- */
@@ -483,3 +571,4 @@ async function init() {
 }
 
 init();
+
