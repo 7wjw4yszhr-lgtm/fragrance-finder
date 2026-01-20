@@ -6,16 +6,16 @@
     "isDupe": false,
     "inspiredBy": "",
     "family": "Woody",
-    "notes": ["sandalwood", "cedar", "cardamom", "leather", "violet"]
+    "notes": ["sandalwood", "cedarwood", "iris", "ambroxan", "cardamom", "leather", "violet"]
   },
   {
     "name": "Maison Alhambra Sceptre Malachite",
     "brand": "Maison Alhambra",
     "owned": true,
     "isDupe": true,
-    "inspiredBy": "Santal 33",
-    "family": "Woody",
-    "notes": ["sandalwood", "cedar", "spice", "leather"]
+    "inspiredBy": "Stéphane Humbert Lucas 777 God of Fire",
+    "family": "Oriental Woody",
+    "notes": ["Green Tangerine", "Bergamot", "Black Currant", "Aromatic Notes", "Spicey Notes, "Lavender", "Jasmine", "Pink Pepper", "Amber", "Musk", "Woodsy Notes", "Vetiver"]
   },
   {
   "id": "test_sandalwood",
@@ -43,4 +43,5 @@
     "notes": ["bergamot", "vetiver", "ambroxan", "grapefruit", "lavender"]
   }
 ]
+
 
