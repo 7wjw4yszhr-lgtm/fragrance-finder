@@ -1,16 +1,11 @@
 /*  Dilettante eScentials — Fragrance Finder (PWA)
     app.js — FULL REPLACEMENT (stable + smart human intent search)
 
-    Features:
-    - Works with many data formats (notes arrays, note pyramids, spreadsheet keys)
-    - Smart commands:
-        dupes of <x> / inspired by <x> / clones of <x>
-        original <x> / og <x>
-        house original / house:original / my originals
-    - Human intent terms (fresh, blue, summer, sexy, office, etc.)
-    - Synonyms / interchangeables (sandalo ⇄ sandalwood ⇄ santal)
-    - Shows a small banner when synonyms/intent expansions were applied
-      so the user knows results came from "similar terms", not exact literal text.
+    Fix in this version:
+    - Synonyms/intent expansions are treated as OR within each word-group.
+      Example: "sandalo" will match items containing "sandalo" OR "sandalwood" OR "santal"...
+    - Multiple words still behave as AND across groups (expected search behavior).
+    - Shows a banner when expansions were used so you know it was "similar terms."
 */
 
 let DATA = [];
@@ -77,10 +72,6 @@ function badgeText(item) {
   return "Original";
 }
 
-function matchesAllTerms(hay, terms) {
-  return terms.every((t) => hay.includes(t));
-}
-
 /* -------------------- data extraction (all formats) -------------------- */
 
 function extractField(item, candidates) {
@@ -101,16 +92,16 @@ function extractNotes(item) {
 
   const top = extractField(item, [
     "notesTop", "Top Notes", "topNotes", "top_notes",
-    (it) => notesObj?.top,
+    () => notesObj?.top,
   ]);
   const heart = extractField(item, [
     "notesHeart", "Heart Notes", "middleNotes", "middle_notes", "heartNotes",
-    (it) => notesObj?.heart,
-    (it) => notesObj?.middle,
+    () => notesObj?.heart,
+    () => notesObj?.middle,
   ]);
   const base = extractField(item, [
     "notesBase", "Base Notes", "Bottom Notes", "baseNotes", "base_notes",
-    (it) => notesObj?.base,
+    () => notesObj?.base,
   ]);
 
   const allNotes = extractField(item, [
@@ -172,13 +163,14 @@ function buildHaystack(item) {
 
 /* -------------------- smart expansions (synonyms + intent) -------------------- */
 
-/*  Each entry:
-    key -> {
-      add: [terms to add if key present],
-      label: string shown to user as "matched via"
-    }
+/*
+  For a given typed term, we create a GROUP of acceptable alternatives.
+  Matching behavior:
+  - For each typed term/group: ANY alternative can match (OR).
+  - Across multiple typed terms/groups: ALL groups must match (AND).
 */
-const EXPANSIONS = {
+
+const EXPAND = {
   // Sandalwood cluster
   sandalwood: { add: ["santal", "sandalo", "santalum", "sandal"], label: "sandalwood ⇄ santal/sandalo" },
   santal: { add: ["sandalwood", "sandalo", "santalum", "sandal"], label: "santal ⇄ sandalwood/sandalo" },
@@ -189,8 +181,9 @@ const EXPANSIONS = {
   // Amber / woody amber
   ambroxan: { add: ["amberwood", "woody amber", "ambergris"], label: "ambroxan ⇄ amberwood/ambergris" },
   amberwood: { add: ["ambroxan", "woody amber"], label: "amberwood ⇄ ambroxan" },
-  ambergris: { add: ["ambroxan", "salty amber", "marine amber"], label: "ambergris ⇄ ambroxan/marine" },
-  ambery: { add: ["amber", "resinous"], label: "am بیرry ⇄ amber/resinous" }, // harmless; note normalize keeps it safe
+  ambergris: { add: ["ambroxan", "marine amber", "salty amber"], label: "ambergris ⇄ marine/ambroxan" },
+  amber: { add: ["ambery", "resinous"], label: "amber ⇄ ambery/resinous" },
+  ambery: { add: ["amber", "resinous"], label: "ambery ⇄ amber/resinous" },
 
   // Incense
   incense: { add: ["olibanum", "frankincense", "smoky"], label: "incense ⇄ frankincense/olibanum" },
@@ -201,16 +194,17 @@ const EXPANSIONS = {
   oud: { add: ["agarwood"], label: "oud ⇄ agarwood" },
   agarwood: { add: ["oud"], label: "agarwood ⇄ oud" },
 
-  // Iris
+  // Iris / powder
   iris: { add: ["orris", "powdery"], label: "iris ⇄ orris/powdery" },
   orris: { add: ["iris", "powdery"], label: "orris ⇄ iris/powdery" },
+  powdery: { add: ["iris", "orris"], label: "powdery ⇄ iris/orris" },
 
   // Tonka
-  tonka: { add: ["coumarin", "sweet almond"], label: "tonka ⇄ coumarin" },
+  tonka: { add: ["coumarin"], label: "tonka ⇄ coumarin" },
   coumarin: { add: ["tonka"], label: "coumarin ⇄ tonka" },
 
   // Citrus bundle
-  citrus: { add: ["bergamot", "grapefruit", "lemon", "lime", "orange"], label: "citrus ⇄ bergamot/grapefruit/lemon/lime/orange" },
+  citrus: { add: ["bergamot", "grapefruit", "lemon", "lime", "orange", "bright"], label: "citrus ⇄ common citruses" },
   bergamot: { add: ["citrus", "bright"], label: "bergamot ⇄ citrus/bright" },
   grapefruit: { add: ["citrus", "bright"], label: "grapefruit ⇄ citrus/bright" },
   lemon: { add: ["citrus", "bright"], label: "lemon ⇄ citrus/bright" },
@@ -221,21 +215,31 @@ const EXPANSIONS = {
   vanilla: { add: ["vanille", "creamy", "sweet"], label: "vanilla ⇄ creamy/sweet" },
   vanille: { add: ["vanilla", "creamy", "sweet"], label: "vanille ⇄ vanilla" },
 
-  // Musks / clean
-  musky: { add: ["musk", "skin scent"], label: "musky ⇄ musk/skin scent" },
+  // Musk / skin
   musk: { add: ["musky", "skin scent"], label: "musk ⇄ musky/skin scent" },
-  clean: { add: ["fresh", "airy"], label: "clean ⇄ fresh/airy" },
+  musky: { add: ["musk", "skin scent"], label: "musky ⇄ musk/skin scent" },
 
-  // Intent terms (human words)
+  // Human intent terms
   fresh: { add: ["clean", "airy", "citrus", "green"], label: "fresh ⇄ clean/airy/citrus/green" },
+  clean: { add: ["fresh", "airy"], label: "clean ⇄ fresh/airy" },
+  airy: { add: ["fresh", "clean"], label: "airy ⇄ fresh/clean" },
+
   blue: { add: ["aquatic", "marine", "ozonic", "fresh"], label: "blue ⇄ aquatic/marine/ozonic" },
   aquatic: { add: ["blue", "marine", "ozonic"], label: "aquatic ⇄ marine/ozonic" },
   marine: { add: ["blue", "aquatic", "salty"], label: "marine ⇄ aquatic/salty" },
-  green: { add: ["herbal", "leafy", "fresh"], label: "green ⇄ herbal/leafy" },
+  ozonic: { add: ["blue", "aquatic", "airy"], label: "ozonic ⇄ blue/airy" },
+
+  green: { add: ["herbal", "leafy", "fresh"], label: "green ⇄ herbal/leafy/fresh" },
+  herbal: { add: ["green", "leafy"], label: "herbal ⇄ green/leafy" },
+  leafy: { add: ["green", "herbal"], label: "leafy ⇄ green/herbal" },
+
   sweet: { add: ["vanilla", "gourmand", "sugary"], label: "sweet ⇄ vanilla/gourmand" },
   gourmand: { add: ["sweet", "dessert", "edible"], label: "gourmand ⇄ dessert-like" },
+
   spicy: { add: ["warm spicy", "pepper", "cardamom"], label: "spicy ⇄ warm spice/pepper" },
-  smoky: { add: ["incense", "leather", "dark"], label: "smoky ⇄ incense/dark" },
+  smoky: { add: ["incense", "dark"], label: "smoky ⇄ incense/dark" },
+  dark: { add: ["night", "smoky", "amber"], label: "dark ⇄ night/smoky/amber" },
+
   office: { add: ["clean", "fresh", "light"], label: "office ⇄ clean/fresh/light" },
   summer: { add: ["fresh", "citrus", "blue"], label: "summer ⇄ fresh/citrus/blue" },
   winter: { add: ["amber", "spicy", "vanilla"], label: "winter ⇄ amber/spice/vanilla" },
@@ -243,49 +247,48 @@ const EXPANSIONS = {
   sexy: { add: ["amber", "musk", "vanilla"], label: "sexy ⇄ amber/musk/vanilla" },
 };
 
-function expandTerms(terms) {
-  const base = terms.map(normalize).filter(Boolean);
-  const out = [...base];
+function buildGroupsFromTerms(typedTerms) {
+  const groups = [];
   const usedLabels = new Set();
 
-  // exact-key expansions
-  for (const t of base) {
-    const e = EXPANSIONS[t];
-    if (!e) continue;
-    for (const add of e.add) out.push(normalize(add));
-    usedLabels.add(e.label);
+  for (const raw of typedTerms) {
+    const t = normalize(raw);
+    if (!t) continue;
+
+    // Start the group with the typed term itself
+    const group = new Set([t]);
+
+    // Exact expansion by key
+    const ex = EXPAND[t];
+    if (ex) {
+      ex.add.forEach((a) => group.add(normalize(a)));
+      usedLabels.add(ex.label);
+    }
+
+    // Lightweight partial inference (helps users type partials)
+    if (t.includes("santal") || t.includes("sandalo") || t.includes("sandal")) {
+      ["sandalwood", "santal", "sandalo", "santalum", "sandal"].forEach((a) => group.add(a));
+      usedLabels.add("sandalwood family terms");
+    }
+    if (t.includes("ambrox")) {
+      ["ambroxan", "amberwood", "woody amber", "ambergris"].forEach((a) => group.add(a));
+      usedLabels.add("ambroxan family terms");
+    }
+
+    groups.push([...group].filter(Boolean));
   }
 
-  // lightweight partial inference (helps sandalo/santal variations)
-  const joined = base.join(" ");
-  if (joined.includes("santal") || joined.includes("sandalo") || joined.includes("sandal")) {
-    out.push("sandalwood", "santal", "sandalo", "santalum", "sandal");
-    usedLabels.add("sandalwood family terms");
-  }
-  if (joined.includes("ambrox")) {
-    out.push("ambroxan", "amberwood", "woody amber");
-    usedLabels.add("ambroxan family terms");
-  }
-
-  const final = [...new Set(out)].filter(Boolean);
-  return {
-    expanded: final,
-    appliedLabels: [...usedLabels],
-  };
+  return { groups, appliedLabels: [...usedLabels] };
 }
 
-/* -------------------- UI banner for expansions -------------------- */
+function matchGroupsAND(hay, groups) {
+  // AND across groups, OR within group
+  return groups.every((alts) => alts.some((alt) => hay.includes(alt)));
+}
 
 function setExpansionNotice(appliedLabels) {
-  // We inject a small banner into the status element.
-  // If user did not trigger expansions, show normal status only.
   if (!appliedLabels || appliedLabels.length === 0) return "";
-
-  const safe = appliedLabels
-    .slice(0, 4)
-    .map((x) => escapeHtml(x))
-    .join(" · ");
-
+  const safe = appliedLabels.slice(0, 4).map((x) => escapeHtml(x)).join(" · ");
   return ` <span style="opacity:.85">• matched using similar terms: ${safe}</span>`;
 }
 
@@ -373,12 +376,11 @@ function setPrivateMode(on) {
   searchAndRender();
 }
 
-/* -------------------- smart search -------------------- */
+/* -------------------- smart search commands -------------------- */
 
 function parseCommand(q) {
   const s = normalize(q);
 
-  // house originals
   if (
     s === "house original" ||
     s === "house:original" ||
@@ -390,13 +392,11 @@ function parseCommand(q) {
     return { mode: "house_only", query: "" };
   }
 
-  // dupes/inspired/clones
   const dupePrefixes = ["dupes of ", "inspired by ", "clones of ", "dupe of ", "clone of "];
   for (const p of dupePrefixes) {
     if (s.startsWith(p)) return { mode: "dupes_of", query: s.slice(p.length).trim() };
   }
 
-  // original/og
   const origPrefixes = ["original ", "og ", "real "];
   for (const p of origPrefixes) {
     if (s.startsWith(p)) return { mode: "original", query: s.slice(p.length).trim() };
@@ -412,7 +412,8 @@ function searchAndRender() {
   const userTerms = normalize(raw).split(/\s+/).filter(Boolean);
   const queryTerms = (cmd.query || "").split(/\s+/).filter(Boolean);
 
-  const { expanded, appliedLabels } = expandTerms(queryTerms.length ? queryTerms : userTerms);
+  const typedTerms = queryTerms.length ? queryTerms : userTerms;
+  const { groups, appliedLabels } = buildGroupsFromTerms(typedTerms);
 
   const filtered = DATA
     .filter((i) => (els.onlyOwned.checked ? !!i.owned : true))
@@ -420,29 +421,29 @@ function searchAndRender() {
     .filter((i) => {
       if (cmd.mode === "house_only") return !!i.isHouseOriginal;
 
-      if (!expanded.length) return true;
+      if (!groups.length) return true;
 
       if (cmd.mode === "dupes_of") {
         if (!i.isDupe) return false;
-        const ref = normalize(
-          toText(extractField(i, ["inspiredBy", "Inspired By", "reference", "Reference"]))
-        );
-        return expanded.every((t) => ref.includes(t));
+        const ref = normalize(toText(extractField(i, ["inspiredBy", "Inspired By", "reference", "Reference"])));
+        return matchGroupsAND(ref, groups);
       }
 
       if (cmd.mode === "original") {
         if (i.isDupe) return false;
-        return matchesAllTerms(buildHaystack(i), expanded);
+        const hay = buildHaystack(i);
+        return matchGroupsAND(hay, groups);
       }
 
-      return matchesAllTerms(buildHaystack(i), expanded);
+      const hay = buildHaystack(i);
+      return matchGroupsAND(hay, groups);
     })
     .sort((a, b) => normalize(a.name).localeCompare(normalize(b.name)));
 
   const notice = setExpansionNotice(appliedLabels);
   els.status.innerHTML = `${filtered.length} match(es)` + (raw ? ` for "${escapeHtml(raw)}"` : "") + notice;
 
-  // highlight only what the user actually typed (not synonym expansions)
+  // Highlight only what user typed, not expansions
   render(filtered, userTerms);
 }
 
