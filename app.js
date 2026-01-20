@@ -17,9 +17,10 @@ const els = {
   results: document.getElementById("results"),
   status: document.getElementById("status"),
   clearBtn: document.getElementById("clearBtn"),
+  onlyCollection: document.getElementById("onlyCollection"),
+  onlyHouse: document.getElementById("onlyHouse"),
   onlyOriginals: document.getElementById("onlyOriginals"),
   onlyInspired: document.getElementById("onlyInspired"),
-  onlyHouse: document.getElementById("onlyHouse"),
   privateBtn: document.getElementById("privateBtn"),
   privateLabel: document.getElementById("privateLabel"),
   privateHint: document.getElementById("privateHint"),
@@ -34,6 +35,24 @@ function normalize(s) {
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "")
     .trim();
+}
+function resolveCatalog(item) {
+  const c = normalize(item.catalog || "");
+  if (c === "collection" || c === "house") return c;
+
+  // Backward compatibility: anything branded Dilettante is house
+  const b = normalize(toText(item.brand ?? item.house ?? ""));
+  if (b.includes("dilettante escentials")) return "house";
+  return "collection";
+}
+
+function resolveKind(item) {
+  const k = normalize(item.kind || "");
+  if (k === "original" || k === "inspired") return k;
+
+  // Backward compatibility:
+  if (item.isDupe) return "inspired";
+  return "original";
 }
 
 function escapeHtml(s) {
@@ -189,6 +208,7 @@ function buildHaystack(item) {
   const tags = extractField(item, ["tags", "Tags"]);
   const size = extractField(item, ["size", "Size", "Size (ml)"]);
   const notes = extractNotes(item);
+  const aka = extractField(item, ["aka", "AKA", "altNames", "Alternate Names"]);
 
   const builtFrom = extractField(item, [
     (it) => it.private?.builtFrom,
@@ -201,6 +221,7 @@ function buildHaystack(item) {
   return [
     item.id,
     item.name,
+    aka,
     item.brand,
     item.house,
     family,
@@ -209,6 +230,7 @@ function buildHaystack(item) {
     item.concentration,
     size,
     tags,
+      
 
     // notes in all formats:
     item.notes,
@@ -499,22 +521,10 @@ function searchAndRender() {
   const { groups, appliedLabels } = buildGroupsFromTerms(typedTerms);
 
   const filtered = DATA
-    const filtered = DATA
-  // Only Originals: not inspired expressions
-  .filter((i) => (els.onlyOriginals?.checked ? !i.isDupe : true))
-
-  // Only Inspired Expressions
-  .filter((i) => (els.onlyInspired?.checked ? !!i.isDupe : true))
-
-  // Only House: brand/house originals/blends
-  .filter((i) => {
-    if (!els.onlyHouse?.checked) return true;
-    const brand = normalize(toText(i.brand ?? i.house ?? ""));
-    const isHouseBrand = brand.includes("dilettante escentials");
-    const isHouseFlag = !!i.isHouseOriginal;
-    const isHouseBlend = PRIVATE_MODE && !!i.private?.builtFrom;
-    return isHouseBrand || isHouseFlag || isHouseBlend;
-  })
+  .filter((i) => (els.onlyCollection?.checked ? resolveCatalog(i) === "collection" : true))
+  .filter((i) => (els.onlyHouse?.checked ? resolveCatalog(i) === "house" : true))
+  .filter((i) => (els.onlyOriginals?.checked ? resolveKind(i) === "original" : true))
+  .filter((i) => (els.onlyInspired?.checked ? resolveKind(i) === "inspired" : true))
 
   // existing search filter stays the same:
     .filter((i) => {
@@ -567,9 +577,10 @@ async function init() {
   console.error("INIT ERROR:", e);
   els.status.textContent = "Error happened. Open Console (F12) and look for INIT ERROR.";
 }
+  els.onlyCollection?.addEventListener("change", searchAndRender);
+  els.onlyHouse?.addEventListener("change", searchAndRender);
   els.onlyOriginals?.addEventListener("change", searchAndRender);
   els.onlyInspired?.addEventListener("change", searchAndRender);
-  els.onlyHouse?.addEventListener("change", searchAndRender);
   els.q.addEventListener("input", searchAndRender);
   els.onlyOwned.addEventListener("change", searchAndRender);
   els.onlyDupes.addEventListener("change", searchAndRender);
@@ -595,6 +606,7 @@ async function init() {
 }
 
 init();
+
 
 
 
