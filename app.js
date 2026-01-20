@@ -530,6 +530,15 @@ function searchAndRender() {
 
   const notice = setExpansionNotice(appliedLabels);
   els.status.innerHTML = `${filtered.length} match(es)` + (raw ? ` for "${escapeHtml(raw)}"` : "") + notice;
+    
+  // Build per-card metadata (which notes matched) for display
+  const metasById = new Map();
+  for (const item of filtered) {
+    const key = item.id ?? normalize(item.name ?? "");
+    metasById.set(key, {
+      matchedNotes: computeMatchedNotes(item, groups),
+    });
+  }
 
   // Highlight only what user typed, not expansions
     render(filtered, userTerms, metasById);
@@ -572,5 +581,6 @@ async function init() {
 }
 
 init();
+
 
 
