@@ -24,7 +24,7 @@
   "isDupe": false,
   "isHouseOriginal": true,
   "owned": true,
-  "inspiredBy": "—",
+  "inspiredBy": "",
   "family": ["Woody"],
   "gender": "Unisex",
   "concentration": "EDP",
@@ -43,6 +43,7 @@
     "notes": ["bergamot", "vetiver", "ambroxan", "grapefruit", "lavender"]
   }
 ]
+
 
 
 
