@@ -250,25 +250,70 @@ function setPrivateMode(on) {
 /* ---------- SMART SEARCH ---------- */
 
 function expandSynonyms(terms) {
+  // Normalize incoming terms one more time (extra safety)
+  const clean = terms.map(normalize).filter(Boolean);
+
+  // Interchangeable keywords (keep short + practical)
   const map = {
     // Sandalwood cluster
-    sandalwood: ["santal", "sandalo", "santalum"],
-    santal: ["sandalwood", "sandalo", "santalum"],
-    sandalo: ["sandalwood", "santal", "santalum"],
-    santalum: ["sandalwood", "santal", "sandalo"],
+    sandalwood: ["santal", "sandalo", "santalum", "sandal"],
+    santal: ["sandalwood", "sandalo", "santalum", "sandal"],
+    sandalo: ["sandalwood", "santal", "santalum", "sandal"],
+    santalum: ["sandalwood", "santal", "sandalo", "sandal"],
+    sandal: ["sandalwood", "santal", "sandalo", "santalum"],
 
-    // Optional expansions you can grow later
-    ambroxan: ["amberwood", "amber-wood"],
-    amberwood: ["ambroxan"],
+    // Amber / woody amber cluster (optional but useful)
+    ambroxan: ["amberwood", "amber-wood", "ambergris"],
+    amberwood: ["ambroxan", "ambergris"],
+    ambergris: ["ambroxan", "amberwood"],
+
+    // Incense cluster
+    incense: ["olibanum", "frankincense"],
+    frankincense: ["incense", "olibanum"],
+    olibanum: ["incense", "frankincense"],
+
+    // Oud cluster
+    oud: ["agarwood"],
+    agarwood: ["oud"],
+
+    // Iris cluster
+    iris: ["orris"],
+    orris: ["iris"],
+
+    // Tonka cluster
+    tonka: ["coumarin"],
+    coumarin: ["tonka"],
+
+    // Citrus cluster (common interchangeables people type)
+    bergamot: ["citrus"],
+    grapefruit: ["citrus"],
+    lemon: ["citrus"],
+    lime: ["citrus"],
+    citrus: ["bergamot", "grapefruit", "lemon", "lime"],
+
+    // Vanilla cluster (often written different ways)
+    vanilla: ["vanille"],
+    vanille: ["vanilla"],
   };
 
+  // Expand exact matches
   const out = [];
-  for (const t of terms) {
+  for (const t of clean) {
     out.push(t);
     if (map[t]) out.push(...map[t]);
   }
+
+  // Expand partials: if someone types "sandalo" or "santal33" etc.
+  // We do lightweight keyword inference, not language-heavy.
+  const joined = clean.join(" ");
+  if (joined.includes("sand")) out.push("sandalwood", "santal", "sandalo", "sandal");
+  if (joined.includes("santal")) out.push("sandalwood", "sandalo", "santalum", "sandal");
+  if (joined.includes("ambrox")) out.push("ambroxan", "amberwood", "ambergris");
+  if (joined.includes("amberg")) out.push("ambergris", "ambroxan", "amberwood");
+
   return [...new Set(out)].filter(Boolean);
 }
+
 
 function searchAndRender() {
   const raw = els.q.value.trim();
@@ -363,3 +408,4 @@ async function init() {
 }
 
 init();
+
