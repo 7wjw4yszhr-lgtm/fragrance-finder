@@ -199,4 +199,24 @@ button:hover {
   margin-right:6px;
 }
 
+.titleBlock{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+}
+
+.libraryLabel{
+  font-size:14px;
+  color:#cfcfcf;
+  letter-spacing:0.08em;
+  text-transform:uppercase;
+}
+
+.helperText{
+  font-size:13px;
+  color:#9a9a9a;
+  margin-top:6px;
+  max-width:520px;
+}
+
 
