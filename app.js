@@ -88,7 +88,7 @@ function toText(v) {
 
 function badgeText(item) {
   if (item.isHouseOriginal) return "House Original";
-  if (item.isDupe) return "Inspired Expression";
+  if (item.isDupe) return "Inspired";
   return "Original";
 }
 function notesToArray(item) {
@@ -383,7 +383,6 @@ function setExpansionNotice(appliedLabels) {
 
 function cardHtml(item, terms, meta) {
   const badge = badgeText(item);
-  const owned = item.owned ? "Owned" : "Not owned";
   const cardId = "c_" + (item.id ?? normalize(item.name ?? "").replace(/\s+/g, "_"));
 
   const family = toText(extractField(item, ["family", "Olfactive Family", "Scent Family"])).trim();
@@ -415,7 +414,7 @@ function cardHtml(item, terms, meta) {
     '<article class="card">' +
       '<div class="cardTop">' +
         '<div class="title">' + highlight(item.name ?? "", terms) + "</div>" +
-        '<div class="badge">' + badge + " · " + owned + "</div>" +
+        '<div class="badge">' + badge + "</div>" +
       "</div>" +
 
       inspiredLine +
@@ -577,13 +576,29 @@ async function init() {
   console.error("INIT ERROR:", e);
   els.status.textContent = "Error happened. Open Console (F12) and look for INIT ERROR.";
 }
-  els.onlyCollection?.addEventListener("change", searchAndRender);
-  els.onlyHouse?.addEventListener("change", searchAndRender);
-  els.onlyOriginals?.addEventListener("change", searchAndRender);
-  els.onlyInspired?.addEventListener("change", searchAndRender);
-  els.q.addEventListener("input", searchAndRender);
-  els.onlyOwned.addEventListener("change", searchAndRender);
-  els.onlyDupes.addEventListener("change", searchAndRender);
+  els.onlyCollection.addEventListener("change", searchAndRender);
+els.onlyHouse.addEventListener("change", searchAndRender);
+els.onlyOriginals.addEventListener("change", searchAndRender);
+els.onlyInspired.addEventListener("change", searchAndRender);
+function makePairExclusive(a, b) {
+  if (!a || !b) return;
+  a.addEventListener("change", () => {
+    if (a.checked) b.checked = false;
+    searchAndRender();
+  });
+  b.addEventListener("change", () => {
+    if (b.checked) a.checked = false;
+    searchAndRender();
+  });
+}
+
+// Catalog group: pick one
+makePairExclusive(els.onlyCollection, els.onlyHouse);
+
+// Type group: pick one
+makePairExclusive(els.onlyOriginals, els.onlyInspired);
+
+    els.q.addEventListener("input", searchAndRender);
 
   els.clearBtn.addEventListener("click", () => {
     els.q.value = "";
@@ -606,6 +621,7 @@ async function init() {
 }
 
 init();
+
 
 
 
