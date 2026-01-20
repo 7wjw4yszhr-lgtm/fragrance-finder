@@ -235,3 +235,40 @@ button:hover{ background:#1b1b1b; }
 }
 
 .hl{ color:#fff; }
+
+/* --- Badge color tints (subtle) --- */
+.badge {
+  font-size: 12px;
+  border: 1px solid rgba(255,255,255,0.14);
+  padding: 4px 10px;
+  border-radius: 999px;
+  color: #d9d9d9;
+  background: rgba(255,255,255,0.03);
+}
+
+/* Type tints */
+.badge--original {
+  border-color: rgba(120, 200, 255, 0.22);
+  background: rgba(120, 200, 255, 0.06);
+  color: rgba(200, 235, 255, 0.95);
+}
+
+.badge--inspired {
+  border-color: rgba(255, 200, 120, 0.22);
+  background: rgba(255, 200, 120, 0.06);
+  color: rgba(255, 235, 205, 0.95);
+}
+
+.badge--house-original {
+  border-color: rgba(140, 255, 200, 0.20);
+  background: rgba(140, 255, 200, 0.06);
+  color: rgba(210, 255, 235, 0.95);
+}
+
+.badge--house-inspired {
+  border-color: rgba(200, 160, 255, 0.22);
+  background: rgba(200, 160, 255, 0.06);
+  color: rgba(235, 220, 255, 0.95);
+}
+
+
