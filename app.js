@@ -543,8 +543,9 @@ async function init() {
     DATA = await res.json();
     searchAndRender();
   } catch (e) {
-    els.status.textContent = "Could not load fragrances.json. Check JSON format and file name.";
-  }
+  console.error("INIT ERROR:", e);
+  els.status.textContent = "Error happened. Open Console (F12) and look for INIT ERROR.";
+}
 
   els.q.addEventListener("input", searchAndRender);
   els.onlyOwned.addEventListener("change", searchAndRender);
@@ -571,4 +572,5 @@ async function init() {
 }
 
 init();
+
 
