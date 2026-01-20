@@ -17,8 +17,9 @@ const els = {
   results: document.getElementById("results"),
   status: document.getElementById("status"),
   clearBtn: document.getElementById("clearBtn"),
-  onlyOwned: document.getElementById("onlyOwned"),
-  onlyDupes: document.getElementById("onlyDupes"),
+  onlyOriginals: document.getElementById("onlyOriginals"),
+  onlyInspired: document.getElementById("onlyInspired"),
+  onlyHouse: document.getElementById("onlyHouse"),
   privateBtn: document.getElementById("privateBtn"),
   privateLabel: document.getElementById("privateLabel"),
   privateHint: document.getElementById("privateHint"),
@@ -498,8 +499,24 @@ function searchAndRender() {
   const { groups, appliedLabels } = buildGroupsFromTerms(typedTerms);
 
   const filtered = DATA
-    .filter((i) => (els.onlyOwned.checked ? !!i.owned : true))
-    .filter((i) => (els.onlyDupes.checked ? !!i.isDupe : true))
+    const filtered = DATA
+  // Only Originals: not inspired expressions
+  .filter((i) => (els.onlyOriginals?.checked ? !i.isDupe : true))
+
+  // Only Inspired Expressions
+  .filter((i) => (els.onlyInspired?.checked ? !!i.isDupe : true))
+
+  // Only House: brand/house originals/blends
+  .filter((i) => {
+    if (!els.onlyHouse?.checked) return true;
+    const brand = normalize(toText(i.brand ?? i.house ?? ""));
+    const isHouseBrand = brand.includes("dilettante escentials");
+    const isHouseFlag = !!i.isHouseOriginal;
+    const isHouseBlend = PRIVATE_MODE && !!i.private?.builtFrom;
+    return isHouseBrand || isHouseFlag || isHouseBlend;
+  })
+
+  // existing search filter stays the same:
     .filter((i) => {
       if (cmd.mode === "house_only") return !!i.isHouseOriginal;
 
@@ -550,7 +567,9 @@ async function init() {
   console.error("INIT ERROR:", e);
   els.status.textContent = "Error happened. Open Console (F12) and look for INIT ERROR.";
 }
-
+  els.onlyOriginals?.addEventListener("change", searchAndRender);
+  els.onlyInspired?.addEventListener("change", searchAndRender);
+  els.onlyHouse?.addEventListener("change", searchAndRender);
   els.q.addEventListener("input", searchAndRender);
   els.onlyOwned.addEventListener("change", searchAndRender);
   els.onlyDupes.addEventListener("change", searchAndRender);
@@ -576,6 +595,7 @@ async function init() {
 }
 
 init();
+
 
 
 
