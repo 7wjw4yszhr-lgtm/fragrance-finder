@@ -229,5 +229,23 @@ button:hover {
   gap:10px;
 }
 
+.wrap{
+  text-align:left;
+}
+
+
+.titleBlock{
+  align-items:flex-start;
+  text-align:left;
+}
+
+.filterBlock{
+  margin-top:10px;
+  width:100%;
+}
+
+.searchRow{
+  width:100%;
+}
 
 
