@@ -15,7 +15,7 @@
     "isDupe": true,
     "inspiredBy": "Stéphane Humbert Lucas 777 God of Fire",
     "family": "Oriental Woody",
-    "notes": ["Green Tangerine", "Bergamot", "Black Currant", "Aromatic Notes", "Spicey Notes, "Lavender", "Jasmine", "Pink Pepper", "Amber", "Musk", "Woodsy Notes", "Vetiver"]
+    "notes": ["Green Tangerine", "Bergamot", "Black Currant", "Aromatic Notes", "Spicey Notes", "Lavender", "Jasmine", "Pink Pepper", "Amber", "Musk", "Woodsy Notes", "Vetiver"]
   },
   {
   "id": "test_sandalwood",
@@ -43,5 +43,6 @@
     "notes": ["bergamot", "vetiver", "ambroxan", "grapefruit", "lavender"]
   }
 ]
+
 
 
