@@ -87,10 +87,20 @@ function toText(v) {
 }
 
 function badgeText(item) {
-  if (item.isHouseOriginal) return "House Original";
-  if (item.isDupe) return "Inspired";
-  return "Original";
+  const brand = normalize(toText(item.brand ?? item.house ?? ""));
+  const isHouse = brand === normalize("Dilettante eScentials") || !!item.isHouse;
+
+  // Inspired = has isDupe true OR has an inspiredBy reference
+  const hasReference = !!toText(item.inspiredBy ?? "").trim();
+  const isInspired = !!item.isDupe || hasReference;
+
+  if (isHouse) {
+    return isInspired ? "House Inspired" : "House Original";
+  }
+
+  return isInspired ? "Inspired" : "Original";
 }
+
 function notesToArray(item) {
   // Returns notes as an array of original strings, deduped, from any supported format.
   // This is for DISPLAY and match-metadata, not for filtering.
@@ -623,6 +633,7 @@ makePairExclusive(els.onlyOriginals, els.onlyInspired);
 }
 
 init();
+
 
 
 
