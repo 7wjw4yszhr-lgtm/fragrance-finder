@@ -45,6 +45,14 @@ function resolveCatalog(item) {
   if (b.includes("dilettante escentials")) return "house";
   return "collection";
 }
+function badgeClass(item) {
+  const isHouse = !!item.isHouseOriginal || (normalize(item.brand || item.house || "") === "dilettante escentials");
+
+  if (isHouse && item.isHouseOriginal) return "badge--house-original";
+  if (isHouse && item.isDupe) return "badge--house-inspired";
+  if (item.isDupe) return "badge--inspired";
+  return "badge--original";
+}
 
 function resolveKind(item) {
   const k = normalize(item.kind || "");
@@ -428,7 +436,7 @@ function cardHtml(item, terms, meta) {
     '<article class="card">' +
       '<div class="cardTop">' +
         '<div class="title">' + highlight(item.name ?? "", terms) + "</div>" +
-        '<div class="badge">' + badge + "</div>" +
+        '<div class="badge ' + badgeClass(item) + '">' + badge + "</div>" +
       "</div>" +
 
       inspiredLine +
@@ -637,6 +645,7 @@ makePairExclusive(els.onlyOriginals, els.onlyInspired);
 }
 
 init();
+
 
 
 
