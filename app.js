@@ -421,7 +421,9 @@ function cardHtml(item, terms, meta) {
       matchedNotesLine +
 
       '<div class="metaRow">' +
-        '<div class="metaItem"><span class="metaLabel">House</span> ' + highlight(toText(item.brand ?? item.house ?? ""), terms) + "</div>" +
+        '<div class="metaItem"><span class="metaLabel">' +
+  (normalize(toText(item.brand ?? item.house ?? "")).includes("dilettante escentials") ? "House" : "Brand") +
+  "</span> " + highlight(toText(item.brand ?? item.house ?? ""), terms) + "</div>" +
         '<div class="metaItem"><span class="metaLabel">Family</span> ' + highlight(family || "—", terms) + "</div>" +
         (gender ? '<div class="metaItem"><span class="metaLabel">Gender</span> ' + highlight(gender, terms) + "</div>" : "") +
       "</div>" +
@@ -621,6 +623,7 @@ makePairExclusive(els.onlyOriginals, els.onlyInspired);
 }
 
 init();
+
 
 
 
