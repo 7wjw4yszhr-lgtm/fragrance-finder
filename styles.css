@@ -229,23 +229,16 @@ button:hover {
   gap:10px;
 }
 
-.wrap{
-  text-align:left;
+header.wrap{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
 }
 
-
-.titleBlock{
-  align-items:flex-start;
-  text-align:left;
-}
-
-.filterBlock{
-  margin-top:10px;
+header .topBar,
+header .searchRow,
+header .filterBlock,
+header .status{
   width:100%;
 }
-
-.searchRow{
-  width:100%;
-}
-
 
