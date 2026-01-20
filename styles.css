@@ -1,124 +1,54 @@
 :root { color-scheme: dark; }
 * { box-sizing: border-box; }
 
-body {
-  margin: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
-  background: #0b0b0b;
-  color: #f2f2f2;
+body{
+  margin:0;
+  font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+  background:#0b0b0b;
+  color:#f2f2f2;
 }
 
-.wrap {
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 16px;
+.wrap{
+  max-width:920px;
+  margin:0 auto;
+  padding:16px;
 }
 
-h1 {
-  margin: 8px 0 6px;
-  font-size: 26px;
+/* ---------- header ---------- */
+.topBar{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
 }
 
-.sub {
-  margin: 0 0 14px;
-  color: #b7b7b7;
+.titleBlock{
+  display:flex;
+  flex-direction:column;
+  gap:0;
+  max-width:560px;
 }
 
-/* Ensure search and filters stay full across the centered container */
-.searchRow,
-.filterBlock{
-  width:100%;
+h1{
+  margin:8px 0 2px;
+  font-size:28px;
 }
 
-input[type="search"] {
-  width: 100%;
-  padding: 14px;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  background: #111;
-  color: #fff;
-  font-size: 16px;
-  outline: none;
+.libraryLabel{
+  font-size:14px;
+  font-weight:700;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:#d6d6d6;
+  margin-top:2px;
 }
 
-button {
-  padding: 14px;
-  border: 1px solid #2a2a2a;
-  border-radius: 12px;
-  background: #151515;
-  color: #fff;
-  cursor: pointer;
-}
-
-button:hover {
-  background: #1b1b1b;
-}
-
-.toggles {
-  margin-top: 10px;
-  display: flex;
-  gap: 18px;
-  color: #cfcfcf;
-}
-
-.status {
-  margin-top: 10px;
-  color: #a9a9a9;
-}
-
-.results {
-  display: grid;
-  gap: 12px;
-  margin-top: 14px;
-}
-
-.card {
-  border: 1px solid #2a2a2a;
-  background: #111;
-  border-radius: 14px;
-  padding: 14px;
-}
-
-.cardTop {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  align-items: baseline;
-}
-
-.title {
-  font-weight: 700;
-  font-size: 17px;
-}
-
-.badge {
-  font-size: 12px;
-  border: 1px solid #2a2a2a;
-  padding: 4px 8px;
-  border-radius: 999px;
-  color: #cfcfcf;
-}
-
-.kv {
-  margin-top: 10px;
-  display: grid;
-  gap: 6px;
-  font-size: 14px;
-  color: #d6d6d6;
-}
-
-.kv b {
-  color: #fff;
-  font-weight: 650;
-}
-
-.foot {
-  color: #8f8f8f;
-  padding-bottom: 28px;
-}
-
-.hl {
-  color: #fff;
+.helperText{
+  font-size:13px;
+  color:#9a9a9a;
+  margin-top:8px;
+  line-height:1.35;
 }
 
 .iconBtn{
@@ -134,9 +64,7 @@ button:hover {
   white-space:nowrap;
 }
 
-.iconBtn:hover{
-  background:rgba(255,255,255,0.07);
-}
+.iconBtn:hover{ background:rgba(255,255,255,0.07); }
 
 .privateHint{
   margin-top:10px;
@@ -147,56 +75,74 @@ button:hover {
   font-size:13px;
   opacity:0.9;
 }
-/* Inline sub-lines under fragrance title (Inspired by, Matched notes) */
-.subLine {
-  margin-top: 6px;
-  font-size: 13px;
-  color: #cfcfcf;
+
+/* ---------- controls block (SEARCH + FILTERS + STATUS) ---------- */
+.controlBlock{
+  margin-top:10px;
+  display:flex;
+  flex-direction:column;
+  gap:10px;
 }
 
-/* Small pill-style note chips */
-.chip {
-  display: inline-block;
-  padding: 3px 9px;
-  margin: 3px 6px 0 0;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.16);
-  background: rgba(255,255,255,0.03);
-  font-size: 12px;
-  color: #e6e6e6;
+.searchRow{
+  width:100%;
+  display:flex;           /* THIS is what keeps Clear on the right */
+  gap:10px;
+  align-items:center;
 }
 
-/* --- Filters row: keep CATALOG + TYPE aligned and centered --- */
+input[type="search"]{
+  flex:1;                 /* THIS is what keeps input full width */
+  min-width:0;
+  padding:14px;
+  border:1px solid #2a2a2a;
+  border-radius:12px;
+  background:#111;
+  color:#fff;
+  font-size:16px;
+  outline:none;
+}
+
+button{
+  padding:14px;
+  border:1px solid #2a2a2a;
+  border-radius:12px;
+  background:#151515;
+  color:#fff;
+  cursor:pointer;
+}
+
+button:hover{ background:#1b1b1b; }
+
+/* Filters directly under search, aligned left, inside centered wrap */
 .filterBlock{
   width:100%;
   display:flex;
-  justify-content:center;   /* centers the whole filter row */
+  gap:14px;
+  flex-wrap:wrap;
   align-items:center;
-  gap:16px;
-  flex-wrap:wrap;           /* wraps nicely on small screens */
-  margin-top:12px;
+  justify-content:flex-start;
 }
 
 .filterGroup{
   display:flex;
   align-items:center;
-  gap:12px;
-  padding:10px 12px;
-  border-radius:999px;      /* pill group */
+  gap:14px;
+  padding:8px 10px;
   border:1px solid rgba(255,255,255,0.10);
   background:rgba(255,255,255,0.03);
+  border-radius:12px;
 }
 
 .filterTitle{
-  font-size:11px;
+  font-size:12px;
+  color:#b7b7b7;
   letter-spacing:0.10em;
   text-transform:uppercase;
-  color:#b7b7b7;
-  margin-right:4px;
+  margin-right:6px;
   white-space:nowrap;
 }
 
-/* Make the checkbox + label pairs look consistent */
 .filterGroup label{
   display:inline-flex;
   align-items:center;
@@ -212,49 +158,80 @@ button:hover {
   accent-color:#ffffff;
 }
 
+/* status stays under filters, aligned with content (so not stuck left) */
+.status{
+  width:100%;
+  margin-top:2px;
+  color:#a9a9a9;
+}
 
-.titleBlock{
+/* ---------- results ---------- */
+.results{
+  display:grid;
+  gap:12px;
+  margin-top:14px;
+}
+
+.card{
+  border:1px solid #2a2a2a;
+  background:#111;
+  border-radius:14px;
+  padding:14px;
+}
+
+.cardTop{
   display:flex;
-  flex-direction:column;
-  gap:0px;   /* tighter stack */
-  max-width:520px;
-}
-
-h1{
-  margin: 8px 0 2px;   /* reduce gap under brand */
-  font-size: 28px;     /* slight lift */
-}
-
-.libraryLabel{
-  font-size:14px;      /* bigger */
-  font-weight:700;     /* thicker */
-  letter-spacing:0.12em;
-  text-transform:uppercase;
-  color:#d6d6d6;
-  margin-top:2px;      /* closer to h1 */
-}
-
-.helperText{
-  font-size:13px;
-  color:#9a9a9a;
-  margin-top:8px;
-  line-height:1.35;
-  max-width:560px;
-}
-
-.topBar{
-  display:flex;
-  align-items:flex-start;
   justify-content:space-between;
   gap:12px;
-  margin-bottom:10px;
+  align-items:baseline;
 }
 
-.controlBlock{
+.title{
+  font-weight:700;
+  font-size:17px;
+}
+
+.badge{
+  font-size:12px;
+  border:1px solid #2a2a2a;
+  padding:4px 8px;
+  border-radius:999px;
+  color:#cfcfcf;
+}
+
+.subLine{
+  margin-top:6px;
+  font-size:13px;
+  color:#cfcfcf;
+}
+
+.chip{
+  display:inline-block;
+  padding:3px 9px;
+  margin:3px 6px 0 0;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,0.16);
+  background:rgba(255,255,255,0.03);
+  font-size:12px;
+  color:#e6e6e6;
+}
+
+.kv{
   margin-top:10px;
-  display:flex;
-  flex-direction:column;
-  gap:10px;
+  display:grid;
+  gap:6px;
+  font-size:14px;
+  color:#d6d6d6;
 }
 
+.kv b{
+  color:#fff;
+  font-weight:650;
+}
 
+.foot{
+  color:#8f8f8f;
+  padding-bottom:28px;
+}
+
+.hl{ color:#fff; }
