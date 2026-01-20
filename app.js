@@ -45,12 +45,12 @@ function resolveCatalog(item) {
   if (b.includes("dilettante escentials")) return "house";
   return "collection";
 }
-function badgeClass(item) {
-  const isHouse = !!item.isHouseOriginal || (normalize(item.brand || item.house || "") === "dilettante escentials");
+function badgeClassFromText(badgeTextValue) {
+  const s = normalize(badgeTextValue || "");
 
-  if (isHouse && item.isHouseOriginal) return "badge--house-original";
-  if (isHouse && item.isDupe) return "badge--house-inspired";
-  if (item.isDupe) return "badge--inspired";
+  if (s.includes("house") && s.includes("original")) return "badge--house-original";
+  if (s.includes("house") && s.includes("inspired")) return "badge--house-inspired";
+  if (s.includes("inspired")) return "badge--inspired";
   return "badge--original";
 }
 
@@ -645,6 +645,7 @@ makePairExclusive(els.onlyOriginals, els.onlyInspired);
 }
 
 init();
+
 
 
 
