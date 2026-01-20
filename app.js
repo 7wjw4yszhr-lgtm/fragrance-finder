@@ -393,6 +393,10 @@ function setExpansionNotice(appliedLabels) {
 
 function cardHtml(item, terms, meta) {
   const badge = badgeText(item);
+  const brandNorm = normalize(toText(item.brand ?? item.house ?? ""));
+  const isHouse = brandNorm === normalize("Dilettante eScentials") || !!item.isHouse;
+  const catalogLabel = isHouse ? "House" : "Collection";
+
   const cardId = "c_" + (item.id ?? normalize(item.name ?? "").replace(/\s+/g, "_"));
 
   const family = toText(extractField(item, ["family", "Olfactive Family", "Scent Family"])).trim();
@@ -424,7 +428,7 @@ function cardHtml(item, terms, meta) {
     '<article class="card">' +
       '<div class="cardTop">' +
         '<div class="title">' + highlight(item.name ?? "", terms) + "</div>" +
-        '<div class="badge">' + badge + "</div>" +
+        '<div class="badge">' + catalogLabel + " · " + badge + "</div>" +
       "</div>" +
 
       inspiredLine +
@@ -633,6 +637,7 @@ makePairExclusive(els.onlyOriginals, els.onlyInspired);
 }
 
 init();
+
 
 
 
